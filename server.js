@@ -85,27 +85,26 @@ app.post("/api/image", async (req,res)=>{
     return res.status(400).json({error:"Prompt is required."});
 
   try{
-    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent",{
-      method:"POST",
-      headers:{
-        "x-goog-api-key":API_KEY,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        contents:[{
-          parts:[{text:prompt}]
-        }],
-        generationConfig:{
-          responseModalities:["IMAGE"],
-          responseFormat:{
-            image:{
-              aspectRatio:ratioValue(ratio),
-              imageSize:size
-            }
+    const r=await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/interactions",
+      {
+        method:"POST",
+        headers:{
+          "x-goog-api-key":API_KEY,
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          model:"gemini-3.1-flash-image",
+          input:prompt,
+          response_format:{
+            type:"image",
+            mime_type:"image/png",
+            aspect_ratio:ratioValue(ratio),
+            image_size:size
           }
-        }
-      })
-    });
+        })
+      }
+    );
 
     const data=await r.json();
 
@@ -114,22 +113,22 @@ app.post("/api/image", async (req,res)=>{
         error:data.error?.message||"Image generation error"
       });
 
-    const part=data.candidates?.[0]?.content?.parts
-      ?.find(p=>p.inlineData);
+    const image=data.output_image;
 
-    if(!part)
-      return res.status(500).json({error:"No image was returned."});
+    if(!image?.data)
+      return res.status(500).json({
+        error:"No image was returned."
+      });
 
     res.json({
-      mimeType:part.inlineData.mimeType||"image/png",
-      data:part.inlineData.data
+      mimeType:image.mime_type||"image/png",
+      data:image.data
     });
 
   }catch(e){
     res.status(500).json({error:e.message});
   }
 });
-
 app.post("/api/video/start", async (req,res)=>{
   if(!requireKey(res)) return;
 
