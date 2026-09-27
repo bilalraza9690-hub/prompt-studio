@@ -72,61 +72,64 @@ Make each prompt detailed, visual, original and suitable for an AI generation mo
   }
 });
 
-app.post("/api/image", async (req,res)=>{
-  if(!requireKey(res)) return;
-
+   app.post("/api/image", async (req,res)=>{
   const {
     prompt,
-    ratio="9:16 Vertical",
-    size="1K"
-  }=req.body;
+    ratio="9:16 Vertical"
+  } = req.body;
 
   if(!prompt)
-    return res.status(400).json({error:"Prompt is required."});
-
-  try{
-    const r=await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/interactions",
-      {
-        method:"POST",
-        headers:{
-          "x-goog-api-key":API_KEY,
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-          model:"gemini-3.1-flash-image",
-          input:prompt,
-          response_format:{
-            type:"image",
-            mime_type:"image/jpeg",
-            aspect_ratio:ratioValue(ratio),
-            image_size:size
-          }
-        })
-      }
-    );
-
-    const data=await r.json();
-
-    if(!r.ok)
-      return res.status(r.status).json({
-        error:data.error?.message||"Image generation error"
-      });
-
-    const image=data.output_image;
-
-    if(!image?.data)
-      return res.status(500).json({
-        error:"No image was returned."
-      });
-
-    res.json({
-      mimeType:image.mime_type||"image/png",
-      data:image.data
+    return res.status(400).json({
+      error:"Prompt is required."
     });
 
+  const POLL_KEY = process.env.POLLINATIONS_API_KEY;
+
+  if(!POLL_KEY)
+    return res.status(500).json({
+      error:"POLLINATIONS_API_KEY is not configured."
+    });
+
+  try{
+    const width = ratio==="9:16 Vertical" ? 768 : 1024;
+    const height = ratio==="9:16 Vertical" ? 1365 : 1024;
+
+    const url =
+      "https://gen.pollinations.ai/image/" +
+      encodeURIComponent(prompt) +
+      "?model=flux" +
+      "&width=" + width +
+      "&height=" + height +
+      "&nologo=true";
+
+    const r = await fetch(url,{
+      headers:{
+        "Authorization":"Bearer " + POLL_KEY
+      }
+    });
+
+    if(!r.ok){
+      const errorText = await r.text();
+      return res.status(r.status).json({
+        error:errorText || "Pollinations image generation failed."
+      });
+    }
+
+    const imageBuffer = Buffer.from(
+      await r.arrayBuffer()
+    );
+
+    res.setHeader(
+      "Content-Type",
+      r.headers.get("content-type") || "image/jpeg"
+    );
+
+    res.send(imageBuffer);
+
   }catch(e){
-    res.status(500).json({error:e.message});
+    res.status(500).json({
+      error:e.message
+    });
   }
 });
 app.post("/api/video/start", async (req,res)=>{
