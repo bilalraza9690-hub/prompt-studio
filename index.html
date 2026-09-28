@@ -1,23 +1,365 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prompt Studio AI</title>
+from pathlib import Path
+
+html = r'''<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prompt Studio AI</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;background:#080d19;color:#f5f7ff;font-family:Arial,sans-serif}.wrap{max-width:900px;margin:auto;padding:18px 15px 50px}header{text-align:center;padding:12px}.logo{font-size:34px;font-weight:900;background:linear-gradient(90deg,#8b5cf6,#06b6d4);background-clip:text;color:transparent}.tag{color:#9aa6bf;margin-top:6px}.card{background:#111a2d;border:1px solid #26334f;border-radius:18px;padding:18px;margin:14px 0}label{display:block;font-weight:700;margin:0 0 8px}textarea,select{width:100%;background:#090f1d;border:1px solid #30405f;border-radius:12px;color:#fff;padding:13px;font-size:15px}textarea{min-height:130px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}button{border:0;border-radius:12px;padding:13px;font-weight:800;color:#fff;cursor:pointer}.prompt{background:#475569}.image{background:linear-gradient(90deg,#7c3aed,#a855f7)}.video{background:linear-gradient(90deg,#0891b2,#06b6d4)}.full{width:100%;margin-top:10px}.out{white-space:pre-wrap;background:#090f1d;border:1px solid #293856;border-radius:12px;padding:15px;line-height:1.55}.copy{background:#253451;margin-top:10px}.media{width:100%;border-radius:14px;margin-top:10px;background:#000}.status{text-align:center;color:#9aa6bf;margin:14px}.error{color:#ff9b9b}.download{display:inline-block;text-decoration:none;background:#253451;color:#fff;padding:11px 15px;border-radius:10px;margin-top:10px;font-weight:700}@media(max-width:600px){.grid,.actions{grid-template-columns:1fr}.logo{font-size:29px}}
-</style></head><body><div class="wrap">
-<header><div class="logo">Prompt Studio AI</div><div class="tag">Prompts • Images • Videos</div></header>
-<div class="card"><label>Your idea</label><textarea id="idea" placeholder="Write anything..."></textarea>
+*{box-sizing:border-box}
+body{margin:0;background:#080d19;color:#f5f7ff;font-family:Arial,sans-serif}
+.wrap{max-width:900px;margin:auto;padding:18px 15px 50px}
+header{text-align:center;padding:12px}
+.logo{font-size:34px;font-weight:900;background:linear-gradient(90deg,#8b5cf6,#06b6d4);background-clip:text;color:transparent}
+.tag{color:#9aa6bf;margin-top:6px}
+.card{background:#111a2d;border:1px solid #26334f;border-radius:18px;padding:18px;margin:14px 0}
+label{display:block;font-weight:700;margin:0 0 8px}
+textarea,select{width:100%;background:#090f1d;border:1px solid #30405f;border-radius:12px;color:#fff;padding:13px;font-size:15px}
+textarea{min-height:130px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+button{border:0;border-radius:12px;padding:13px;font-weight:800;color:#fff;cursor:pointer}
+.prompt{background:#475569}
+.image{background:linear-gradient(90deg,#7c3aed,#a855f7)}
+.video{background:linear-gradient(90deg,#0891b2,#06b6d4)}
+.full{width:100%;margin-top:10px}
+.out{white-space:pre-wrap;background:#090f1d;border:1px solid #293856;border-radius:12px;padding:15px;line-height:1.55}
+.copy{background:#253451;margin-top:10px}
+.media{width:100%;border-radius:14px;margin-top:10px;background:#000}
+.status{text-align:center;color:#9aa6bf;margin:14px}
+.error{color:#ff9b9b}
+.download{display:inline-block;text-decoration:none;background:#253451;color:#fff;padding:11px 15px;border-radius:10px;margin-top:10px;font-weight:700}
+@media(max-width:600px){
+  .grid,.actions{grid-template-columns:1fr}
+  .logo{font-size:29px}
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">Prompt Studio AI</div>
+  <div class="tag">Prompts • Images • Videos</div>
+</header>
+
+<div class="card">
+
+<label>Your idea</label>
+<textarea id="idea" placeholder="Write anything..."></textarea>
+
 <div class="grid">
-<div><label>Creation type</label><select id="type"><option>Video Prompt</option><option>Image Prompt</option><option>Character Prompt</option><option>Story Prompt</option><option>Scene-by-Scene Prompt</option><option>Thumbnail Prompt</option><option>Product Prompt</option></select></div>
-<div><label>Style</label><select id="style"><option>Cinematic</option><option>Realistic</option><option>3D Animation</option><option>Anime</option><option>Cartoon</option><option>Fantasy</option><option>Professional</option></select></div>
-<div><label>Aspect ratio</label><select id="ratio"><option>9:16 Vertical</option><option>16:9 Landscape</option><option>1:1 Square</option></select></div>
-<div><label>Number</label><select id="count"><option>1</option><option>3</option><option>5</option><option>10</option></select></div>
+
+<div>
+<label>Creation type</label>
+<select id="type">
+<option>Video Prompt</option>
+<option>Image Prompt</option>
+<option>Character Prompt</option>
+<option>Story Prompt</option>
+<option>Scene-by-Scene Prompt</option>
+<option>Thumbnail Prompt</option>
+<option>Product Prompt</option>
+</select>
 </div>
-<div class="actions"><button class="prompt" onclick="makePrompts()">✍️ Generate Prompts</button><button class="image" onclick="makeImage()">🖼️ Generate Image</button></div>
-<button class="video full" onclick="makeVideo()">🎬 Generate Video</button><div id="status" class="status"></div></div><div id="results"></div></div>
+
+<div>
+<label>Style</label>
+<select id="style">
+<option>Cinematic</option>
+<option>Realistic</option>
+<option>3D Animation</option>
+<option>Anime</option>
+<option>Cartoon</option>
+<option>Fantasy</option>
+<option>Professional</option>
+</select>
+</div>
+
+<div>
+<label>Aspect ratio</label>
+<select id="ratio">
+<option>9:16 Vertical</option>
+<option>16:9 Landscape</option>
+<option>1:1 Square</option>
+</select>
+</div>
+
+<div>
+<label>Number</label>
+<select id="count">
+<option>1</option>
+<option>3</option>
+<option>5</option>
+<option>10</option>
+</select>
+</div>
+
+</div>
+
+<div class="actions">
+<button class="prompt" onclick="makePrompts()">✍️ Generate Prompts</button>
+<button class="image" onclick="makeImage()">🖼️ Generate Image</button>
+</div>
+
+<button class="video full" onclick="makeVideo()">🎬 Generate Video</button>
+
+<div id="status" class="status"></div>
+
+</div>
+
+<div id="results"></div>
+
+</div>
+
 <script>
+
 const $=id=>document.getElementById(id);
-function data(){const idea=$("idea").value.trim();if(!idea){alert("Write your idea first.");return null}return {idea,type:$("type").value,style:$("style").value,ratio:$("ratio").value,count:+$("count").value}}
-function showStatus(s,err=false){$("status").className="status"+(err?" error":"");$("status").innerText=s}
-async function api(url,body){const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw Error(d.error||"Request failed");return d}
-async function makePrompts(){const d=data();if(!d)return;showStatus("Generating prompts...");try{const x=await api("/api/prompt",d);$("results").innerHTML=`<div class="card"><b>AI Prompts</b><div class="out" id="promptOut"></div><button class="copy" onclick="navigator.clipboard.writeText($('promptOut').innerText)">📋 Copy All</button></div>`;$("promptOut").innerText=x.text;showStatus("Done");}catch(e){showStatus(e.message,true)}}
-async function makeImage(){const d=data();if(!d)return;showStatus("Generating image...");try{const p=(await api("/api/prompt",{...d,count:1,type:"Image Prompt"})).text;const x=await api("/api/image",{prompt:p,ratio:d.ratio,size:"1K"});$("results").innerHTML=`<div class="card"><b>Generated Image</b><img class="media" src="data:${x.mimeType};base64,${x.data}"><a class="download" download="prompt-studio-image.png" href="data:${x.mimeType};base64,${x.data}">⬇️ Download Image</a></div>`;showStatus("Image generated");}catch(e){showStatus(e.message,true)}}
-async function makeVideo(){const d=data();if(!d)return;showStatus("Creating video job...");try{const p=(await api("/api/prompt",{...d,count:1,type:"Video Prompt"})).text;const x=await api("/api/video/start",{prompt:p,ratio:d.ratio,quality:"720p"});let tries=0;showStatus("Video is generating...");const timer=setInterval(async()=>{try{const s=await fetch("/api/video/status?name="+encodeURIComponent(x.operation));const z=await s.json();if(!s.ok)throw Error(z.error||"Status failed");if(z.done){clearInterval(timer);$("results").innerHTML=`<div class="card"><b>Generated Video</b><video class="media" controls src="/api/video/file?uri=${encodeURIComponent(z.uri)}"></video><a class="download" href="/api/video/file?uri=${encodeURIComponent(z.uri)}" download="prompt-studio-video.mp4">⬇️ Download Video</a></div>`;showStatus("Video generated");}else{tries++;showStatus("Video is generating... "+tries+" checks");}}catch(e){clearInterval(timer);showStatus(e.message,true)}},10000)}catch(e){showStatus(e.message,true)}}
-</script></body></html>
+
+function data(){
+  const idea=$("idea").value.trim();
+
+  if(!idea){
+    alert("Write your idea first.");
+    return null;
+  }
+
+  return {
+    idea,
+    type:$("type").value,
+    style:$("style").value,
+    ratio:$("ratio").value,
+    count:+$("count").value
+  };
+}
+
+function showStatus(s,err=false){
+  $("status").className="status"+(err?" error":"");
+  $("status").innerText=s;
+}
+
+async function api(url,body){
+  const r=await fetch(url,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(body)
+  });
+
+  const d=await r.json();
+
+  if(!r.ok)
+    throw Error(d.error||"Request failed");
+
+  return d;
+}
+
+async function makePrompts(){
+
+  const d=data();
+  if(!d)return;
+
+  showStatus("Generating prompts...");
+
+  try{
+
+    const x=await api("/api/prompt",d);
+
+    $("results").innerHTML=`
+      <div class="card">
+        <b>AI Prompts</b>
+        <div class="out" id="promptOut"></div>
+        <button class="copy" onclick="navigator.clipboard.writeText($('promptOut').innerText)">
+          📋 Copy All
+        </button>
+      </div>
+    `;
+
+    $("promptOut").innerText=x.text;
+
+    showStatus("Done");
+
+  }catch(e){
+    showStatus(e.message,true);
+  }
+}
+
+
+/*
+  IMAGE GENERATION
+  Uses /api/image directly.
+  This avoids calling /api/prompt first, so Generate Image
+  does not require GEMINI_API_KEY.
+*/
+
+async function makeImage(){
+
+  const d=data();
+  if(!d)return;
+
+  showStatus("Generating image...");
+
+  try{
+
+    const prompt =
+      `${d.idea}. ${d.style} style, high quality, detailed, cinematic lighting, beautiful composition, sharp details, professional AI artwork.`;
+
+    const r=await fetch("/api/image",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        prompt:prompt,
+        ratio:d.ratio
+      })
+    });
+
+    if(!r.ok){
+
+      let msg=await r.text();
+
+      try{
+        const json=JSON.parse(msg);
+        msg=json.error||msg;
+      }catch(e){}
+
+      throw Error(msg||"Image generation failed");
+    }
+
+    const blob=await r.blob();
+
+    const url=URL.createObjectURL(blob);
+
+    $("results").innerHTML=`
+      <div class="card">
+        <b>Generated Image</b>
+
+        <img
+          class="media"
+          src="${url}"
+          alt="Generated Image"
+        >
+
+        <a
+          class="download"
+          download="prompt-studio-image.png"
+          href="${url}"
+        >
+          ⬇️ Download Image
+        </a>
+      </div>
+    `;
+
+    showStatus("Image generated");
+
+  }catch(e){
+
+    showStatus(e.message,true);
+
+  }
+}
+
+
+async function makeVideo(){
+
+  const d=data();
+  if(!d)return;
+
+  showStatus("Creating video job...");
+
+  try{
+
+    const p=(await api("/api/prompt",{
+      ...d,
+      count:1,
+      type:"Video Prompt"
+    })).text;
+
+    const x=await api("/api/video/start",{
+      prompt:p,
+      ratio:d.ratio,
+      quality:"720p"
+    });
+
+    let tries=0;
+
+    showStatus("Video is generating...");
+
+    const timer=setInterval(async()=>{
+
+      try{
+
+        const s=await fetch(
+          "/api/video/status?name="+encodeURIComponent(x.operation)
+        );
+
+        const z=await s.json();
+
+        if(!s.ok)
+          throw Error(z.error||"Status failed");
+
+        if(z.done){
+
+          clearInterval(timer);
+
+          $("results").innerHTML=`
+            <div class="card">
+              <b>Generated Video</b>
+
+              <video
+                class="media"
+                controls
+                src="/api/video/file?uri=${encodeURIComponent(z.uri)}">
+              </video>
+
+              <a
+                class="download"
+                href="/api/video/file?uri=${encodeURIComponent(z.uri)}"
+                download="prompt-studio-video.mp4">
+                ⬇️ Download Video
+              </a>
+            </div>
+          `;
+
+          showStatus("Video generated");
+
+        }else{
+
+          tries++;
+
+          showStatus(
+            "Video is generating... "+tries+" checks"
+          );
+
+        }
+
+      }catch(e){
+
+        clearInterval(timer);
+
+        showStatus(e.message,true);
+
+      }
+
+    },10000);
+
+  }catch(e){
+
+    showStatus(e.message,true);
+
+  }
+}
+
+</script>
+</body>
+</html>
+'''
+
+path = Path("/mnt/data/index.html")
+path.write_text(html, encoding="utf-8")
+print(path)
